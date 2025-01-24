@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SDC Booking System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="booking-system">
+            <div class="header">
+                <h1>SDC BOOKING SYSTEM</h1>
+            </div>
+            <div class="button-container">
+<<<<<<< HEAD
+                <button class="system-btn" onclick="window.location.href='{{ url_for('new_information') }}'">Add New Information</button>
+=======
+                <button class="system-btn" onclick="window.location.href='{{ url_for('login') }}'">Add New Information</button>
+>>>>>>> d1ff3b10ca4acf95bb64ba8cc10df933e3652f67
+                <button class="system-btn" onclick="window.location.href='{{ url_for('add_booking') }}'">Add Booking</button>
+                <button class="system-btn" onclick="window.location.href='{{ url_for('search') }}'">Search Database</button>
+                <button class="system-btn" onclick="window.location.href='{{ url_for('exit_app') }}'">Exit</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
