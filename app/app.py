@@ -256,9 +256,13 @@ def add_booking():
     if request.method == 'POST':
         # Process form data
         trip_id = request.form['trip_date']
-        selected_seats = request.form.getlist('selected_seats')
         customer_id = request.form['customer']
+        special_notes = request.form.get('special_notes', '')
+        selected_seats = request.form.getlist('selected_seats')
+        print(selected_seats)
+        selected_seats = selected_seats[0].split(',')
         num_people = len(selected_seats)
+        print(num_people)
 
         # Calculate booking cost
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
@@ -275,38 +279,36 @@ def add_booking():
             cursor.execute('''INSERT INTO booking 
                             (trip_id, num_of_people, customer_id, booking_cost, special_request, booking_date)
                             VALUES (%s, %s, %s, %s, %s, %s)''',
-                         (trip_id, num_people, customer_id, booking_cost, ','.join(selected_seats), booking_date))
+                           (trip_id, num_people, customer_id, booking_cost, special_notes, booking_date))
             mysql.connection.commit()
             success = True
         except Exception as e:
             success = False
-            # Handle error appropriately
+            print(f"Error: {e}")
         finally:
             cursor.close()
 
         return render_template('add/booking.html',
-                             success=success,
-                             customers=customers,
-                             destinations=destinations,
-                             trips=trips)
+                               success=success,
+                               customers=customers,
+                               destinations=destinations,
+                               trips=trips)
 
     # GET request - show empty form
     return render_template('add/booking.html',
-                         customers=customers,
-                         destinations=destinations,
-                         trips=trips)
+                           customers=customers,
+                           destinations=destinations,
+                           trips=trips)
 
 @app.route('/get_booked_seats')
 def get_booked_seats():
     trip_id = request.args.get('trip_id')
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-    cursor.execute('''SELECT special_request FROM booking WHERE trip_id = %s''', (trip_id,))
-    bookings = cursor.fetchall()
+    cursor.execute('''SELECT SUM(num_of_people) AS booked_seats FROM booking WHERE trip_id = %s''', (trip_id,))
+    result = cursor.fetchone()
     cursor.close()
 
-    booked_seats = []
-    for booking in bookings:
-        booked_seats.extend(booking['special_request'].split(','))
+    booked_seats = result['booked_seats'] if result['booked_seats'] is not None else 0
 
     return jsonify({'booked_seats': booked_seats})
     
