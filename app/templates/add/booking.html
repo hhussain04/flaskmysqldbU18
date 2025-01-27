@@ -17,6 +17,46 @@
                 }
             });
         }
+
+        function toggleSeat(seat) {
+            if (!seat.classList.contains('booked') && !seat.classList.contains('greyed-out')) {
+                seat.classList.toggle('selected');
+                updateSelectedSeats();
+            }
+        }
+
+        function updateSelectedSeats() {
+            const selectedSeats = document.querySelectorAll('.seat.selected');
+            const selectedSeatsInput = document.getElementById('selected_seats');
+            const selectedSeatsArray = Array.from(selectedSeats).map(seat => seat.dataset.seatId);
+            selectedSeatsInput.value = selectedSeatsArray.join(',');
+        }
+
+        function updateSeatSelection() {
+            const tripId = document.getElementById('trip_date').value;
+            const seatContainer = document.querySelector('.seat-container');
+            seatContainer.innerHTML = '';
+
+            fetch(`/get_booked_seats?trip_id=${tripId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const bookedSeats = data.booked_seats;
+                    const numOfSeats = document.querySelector(`#trip_date option[value="${tripId}"]`).dataset.numOfSeats;
+
+                    for (let seat = 1; seat <= numOfSeats; seat++) {
+                        const seatDiv = document.createElement('div');
+                        seatDiv.classList.add('seat');
+                        seatDiv.dataset.seatId = seat;
+                        if (bookedSeats.includes(seat.toString())) {
+                            seatDiv.classList.add('booked');
+                        } else if (seat <= bookedSeats.length) {
+                            seatDiv.classList.add('greyed-out');
+                        }
+                        seatDiv.onclick = () => toggleSeat(seatDiv);
+                        seatContainer.appendChild(seatDiv);
+                    }
+                });
+        }
     </script>
 </head>
 <body>
@@ -31,14 +71,22 @@
             </select>
 
             <label for="trip_date">Trip Date:</label>
-            <select name="trip_date" id="trip_date" required>
+            <select name="trip_date" id="trip_date" onchange="updateSeatSelection()" required>
                 {% for trip in trips %}
-                    <option class="trip-date" data-destination-id="{{ trip.destination_id }}" value="{{ trip.trip_id }}" style="display: none;">{{ trip.trip_date }}</option>
+                    <option class="trip-date" data-destination-id="{{ trip.destination_id }}" data-num-of-seats="{{ trip.num_of_seats }}" value="{{ trip.trip_id }}" style="display: none;">{{ trip.trip_date }}</option>
                 {% endfor %}
             </select>
 
-            <label for="num_people">Number of People:</label>
-            <input type="number" name="num_people" id="num_people" required>
+            <label for="customer">Customer:</label>
+            <select name="customer" id="customer" required>
+                {% for customer in customers %}
+                    <option value="{{ customer.customer_id }}">{{ customer.customer_name }}</option>
+                {% endfor %}
+            </select>
+
+            <label for="seat_selection">Select Seats:</label>
+            <div class="seat-container"></div>
+            <input type="hidden" name="selected_seats" id="selected_seats">
 
             <button type="submit">Add Booking</button>
             <button type="button" onclick="window.location.href='{{ url_for('new_information') }}'">Return to previous</button>

@@ -143,3 +143,38 @@ textarea {
 .table-container td {
     background-color: #f5f5f5;
 }
+.seat {
+    width: 30px;
+    height: 30px;
+    margin: 5px;
+    background-color: #444;
+    border: 1px solid #fff;
+    cursor: pointer;
+    display: inline-block;
+    text-align: center;
+    line-height: 30px;
+    color: white;
+    font-weight: bold;
+}
+
+.seat.selected {
+    background-color: #6c7ae0;
+}
+
+.seat.booked {
+    background-color: #d3d3d3;
+    cursor: not-allowed;
+}
+
+.seat.greyed-out {
+    background-color: #d3d3d3;
+    cursor: not-allowed;
+}
+
+.seat-container {
+    display: flex;
+    flex-wrap: wrap;
+    max-width: 300px;
+    margin: 20px auto;
+    justify-content: center;
+}

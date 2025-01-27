@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 from flask_mysqldb import MySQL
 import MySQLdb.cursors
 from functools import wraps
@@ -235,39 +235,80 @@ def search():
 
 @app.route('/add_booking', methods=['GET', 'POST'])
 def add_booking():
-    if request.method == 'POST':
-        # Get form data
-        trip_id = request.form['trip_date']
-        num_people = request.form['num_people']
+    # Fetch all necessary data for the form (used in both GET and POST)
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    
+    # Get customers for dropdown
+    cursor.execute('SELECT customer_id, CONCAT(first_name, " ", last_name) AS customer_name FROM customer')
+    customers = cursor.fetchall()
+    
+    # Get destinations for potential filtering
+    cursor.execute('SELECT destination_id, destination_name FROM destination')
+    destinations = cursor.fetchall()
+    
+    # Get trips with seat information
+    cursor.execute('''SELECT trip.trip_id, trip.destination_id, trip.trip_date, coach.num_of_seats 
+                      FROM trip 
+                      JOIN coach ON trip.coach_id = coach.coach_id''')
+    trips = cursor.fetchall()
+    cursor.close()
 
-        # Fetch destination cost
+    if request.method == 'POST':
+        # Process form data
+        trip_id = request.form['trip_date']
+        selected_seats = request.form.getlist('selected_seats')
+        customer_id = request.form['customer']
+        num_people = len(selected_seats)
+
+        # Calculate booking cost
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         cursor.execute('''SELECT destination_cost FROM destination 
                           JOIN trip ON destination.destination_id = trip.destination_id 
                           WHERE trip.trip_id = %s''', (trip_id,))
         destination = cursor.fetchone()
         destination_cost = destination['destination_cost']
+        booking_cost = num_people * destination_cost
+        booking_date = datetime.datetime.now().strftime('%Y-%m-%d')
 
-        # Calculate booking cost
-        booking_cost = int(num_people) * destination_cost
+        # Insert booking
+        try:
+            cursor.execute('''INSERT INTO booking 
+                            (trip_id, num_of_people, customer_id, booking_cost, special_request, booking_date)
+                            VALUES (%s, %s, %s, %s, %s, %s)''',
+                         (trip_id, num_people, customer_id, booking_cost, ','.join(selected_seats), booking_date))
+            mysql.connection.commit()
+            success = True
+        except Exception as e:
+            success = False
+            # Handle error appropriately
+        finally:
+            cursor.close()
 
-        # Insert booking into the database
-        cursor.execute('''INSERT INTO booking (trip_id, num_people, booking_cost)
-                          VALUES (%s, %s, %s)''', (trip_id, num_people, booking_cost))
-        mysql.connection.commit()
-        cursor.close()
+        return render_template('add/booking.html',
+                             success=success,
+                             customers=customers,
+                             destinations=destinations,
+                             trips=trips)
 
-        return render_template('add/booking.html', success=True)
+    # GET request - show empty form
+    return render_template('add/booking.html',
+                         customers=customers,
+                         destinations=destinations,
+                         trips=trips)
 
-    # Fetch destinations and trips
+@app.route('/get_booked_seats')
+def get_booked_seats():
+    trip_id = request.args.get('trip_id')
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-    cursor.execute('SELECT destination_id, destination_name FROM destination')
-    destinations = cursor.fetchall()
-    cursor.execute('SELECT trip_id, destination_id, trip_date FROM trip')
-    trips = cursor.fetchall()
+    cursor.execute('''SELECT special_request FROM booking WHERE trip_id = %s''', (trip_id,))
+    bookings = cursor.fetchall()
     cursor.close()
 
-    return render_template('add/booking.html', destinations=destinations, trips=trips)
+    booked_seats = []
+    for booking in bookings:
+        booked_seats.extend(booking['special_request'].split(','))
+
+    return jsonify({'booked_seats': booked_seats})
     
 
 if __name__ == "__main__":
