@@ -302,6 +302,17 @@ def add_booking():
 
 @app.route('/get_booked_seats')
 def get_booked_seats():
+    """
+    Retrieves the number of available seats for a specific trip.
+    This function fetches the trip ID from the request arguments, queries the database to calculate the number of available seats for the specified trip, and returns the result as a JSON response.
+    Returns:
+        JSON: A JSON object containing the number of available seats for the specified trip.
+        The SQL query calculates the number of available seats for a specific trip by:
+        1. Selecting the total number of seats for the coach associated with the trip.
+        2. Subtracting the sum of the number of people booked for the trip (if any).
+        3. Grouping the result by the total number of seats to ensure accurate calculation.
+        4. Using a LEFT JOIN to include trips with no bookings, ensuring the availability is calculated correctly even if no bookings exist.
+    """
     trip_id = request.args.get('trip_id')
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     cursor.execute('''

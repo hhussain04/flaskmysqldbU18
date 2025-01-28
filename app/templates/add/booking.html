@@ -53,23 +53,23 @@
         }
 
         function toggleSeat(seat) {
-            if (!seat.classList.contains('booked') && !seat.classList.contains('greyed-out')) {
-                seat.classList.toggle('selected');
-            }
+        if (!seat.classList.contains('booked') && !seat.classList.contains('greyed-out')) {
+            seat.classList.toggle('selected');
         }
+    }
 
         function updateSelectedSeats() {
-            const selectedSeats = document.querySelectorAll('.seat.selected');
-            const selectedSeatsInput = document.getElementById('selected_seats');
-            const selectedSeatsArray = Array.from(selectedSeats).map(seat => seat.dataset.seatId);
-            selectedSeatsInput.value = selectedSeatsArray.join(',');
+        const selectedSeats = document.querySelectorAll('.seat.selected');
+        const selectedSeatsInput = document.getElementById('selected_seats');
+        const selectedSeatsArray = Array.from(selectedSeats).map(seat => seat.dataset.seatId);
+        selectedSeatsInput.value = selectedSeatsArray.join(',');
         }
     </script>
 </head>
 <body>
     <div class="container">
         <h1>Add Booking</h1>
-        <form method="POST">
+        <form method="POST" onsubmit="updateSelectedSeats()">
             <label for="destination">Destination:</label>
             <select name="destination" id="destination" onchange="filterDates()" required>
                 {% for destination in destinations %}
