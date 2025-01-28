@@ -13,16 +13,10 @@
         <p style="color: red;">{{ error }}</p>
         {% endif %}
         <form method="POST" action="{{ url_for('login') }}">
-<<<<<<< HEAD
-            <input type="password" name="password" placeholder="Enter Password" required>
-            <button type="submit">Login</button>
-            <button type="button" onclick="window.location.href='{{ url_for('index') }}'">Return to Main Menu</button>
-            <button type="button" onclick="window.location.href='{{ session.get('next', url_for('index')) }}'">Return to Previous Page</button>
-=======
             <input type="password" name="password" placeholder="Enter Admin Password" required>
             <button type="submit">Login</button>
+            <button type="button" onclick="window.location.href='{{ url_for('new_information') }}'">Return to Previous</button>
             <button type="button" onclick="window.location.href='{{ url_for('index') }}'">Return to Main Menu</button>
->>>>>>> d1ff3b10ca4acf95bb64ba8cc10df933e3652f67
         </form>
     </div>
 </body>

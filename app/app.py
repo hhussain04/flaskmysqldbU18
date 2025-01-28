@@ -28,10 +28,10 @@ def exit_app():
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if 'logged_in' in session:
-            return f(*args, **kwargs)
-        session['next'] = request.url
-        return redirect(url_for('login'))
+        if 'logged_in' not in session:
+            session['next'] = request.url
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
     return decorated_function
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -104,7 +104,7 @@ def add_trip():
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     cursor.execute('SELECT destination_id, destination_name FROM destination')
     destinations = cursor.fetchall()
-    cursor.execute('SELECT coach_id, coach_registration FROM coach')
+    cursor.execute('SELECT coach_id, reg_number, num_of_seats FROM coach')
     coaches = cursor.fetchall()
     cursor.execute('SELECT driver_id, CONCAT(driver_first_name, " ", driver_last_name) AS name FROM driver')
     drivers = cursor.fetchall()
@@ -304,14 +304,27 @@ def add_booking():
 def get_booked_seats():
     trip_id = request.args.get('trip_id')
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-    cursor.execute('''SELECT SUM(num_of_people) AS booked_seats FROM booking WHERE trip_id = %s''', (trip_id,))
+    cursor.execute('''
+        SELECT 
+            c.num_of_seats - COALESCE(SUM(b.num_of_people), 0) AS seats_available
+        FROM 
+            trip t
+        JOIN 
+            coach c ON t.coach_id = c.coach_id
+        LEFT JOIN 
+            booking b ON t.trip_id = b.trip_id
+        WHERE 
+            t.trip_id = %s
+        GROUP BY 
+            c.num_of_seats
+    ''', (trip_id,))
     result = cursor.fetchone()
     cursor.close()
 
-    booked_seats = result['booked_seats'] if result['booked_seats'] is not None else 0
+    seats_available = result['seats_available'] if result['seats_available'] is not None else 0
+    print(f"Seats available: {seats_available}")
+    return jsonify({'seats_available': seats_available})
 
-    return jsonify({'booked_seats': booked_seats})
-    
 
 if __name__ == "__main__":
     app.run(debug=True)

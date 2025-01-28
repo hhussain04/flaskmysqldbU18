@@ -20,8 +20,8 @@
             <label for="coach">Coach:</label>
             <select name="coach" id="coach" required>
                 {% for coach in coaches %}
-                    <option value="{{ coach.coach_id }}">{{ coach.coach_registration }}</option>
-                {% endfor %}
+                    <option value="{{ coach.coach_id }}">{{ coach.reg_number }} - {{ coach.num_of_seats }} seats</option>
+                {% endfor %}wwwwwwwwwwwww
             </select>
 
             <label for="driver">Driver:</label>
