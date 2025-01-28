@@ -1,3 +1,4 @@
+# Importing necessary libraries and modules
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 from flask_mysqldb import MySQL
 import MySQLdb.cursors
@@ -6,26 +7,43 @@ import secrets
 import sys
 import datetime
 
+# Initialize the Flask application
 app = Flask(__name__)
 
+# Configure MySQL database connection
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
 app.config['MYSQL_PASSWORD'] = 'root'
 app.config['MYSQL_DB'] = 'silverdawncoaches'
 
+# Set the secret key for session management
 app.secret_key = secrets.token_hex(16)
+
+# Define the admin password
 ADMIN_PASSWORD = "root"
+
+# Initialize MySQL extension
 mysql = MySQL(app)
 
 @app.route('/')
 def index():
+    """
+    Renders the main page of the application.
+    """
     return render_template('main.html')
 
 @app.route('/exit')
 def exit_app():
+    """
+    Exits the application.
+    """
     sys.exit(0) 
 
 def login_required(f):
+    """
+    Decorator function to ensure that the user is logged in, applied to routes that require authentication.
+    If the user is not logged in, they are redirected to the login page.
+    """
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'logged_in' not in session:
@@ -36,6 +54,12 @@ def login_required(f):
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    """
+    Handles the login functionality.
+    If the request method is POST, it checks the password.
+    If the password is correct, the user is logged in and redirected to the next page.
+    If the password is incorrect, an error message is displayed.
+    """
     next_page = session.get('next', url_for('index'))
     if request.method == 'POST':
         password = request.form['password']
@@ -49,10 +73,18 @@ def login():
 
 @app.route('/new_information')
 def new_information():
+    """
+    Renders the new information page.
+    """
     return render_template('new_information.html')
 
 @app.route('/add_customer', methods=['GET', 'POST'])
 def add_customer():
+    """
+    Handles the addition of a new customer.
+    If the request method is POST, it processes the form data and inserts a new customer into the database.
+    If the request method is GET, it renders the form for adding a new customer.
+    """
     if request.method == 'POST':
         # Get form data
         first_name = request.form['first_name']
@@ -80,6 +112,11 @@ def add_customer():
 @app.route('/add_trip', methods=['GET', 'POST'])
 @login_required
 def add_trip():
+    """
+    Handles the addition of a new trip.
+    If the request method is POST, it processes the form data and inserts a new trip into the database.
+    If the request method is GET, it fetches existing destinations, coaches, and drivers to populate the form.
+    """
     if request.method == 'POST':
         # Get form data
         destination_id = request.form['destination']
@@ -115,6 +152,11 @@ def add_trip():
 @app.route('/add_destination', methods=['GET', 'POST'])
 @login_required
 def add_destination():
+    """
+    Handles the addition of a new destination.
+    If the request method is POST, it processes the form data and inserts a new destination into the database.
+    If the request method is GET, it renders the form for adding a new destination.
+    """
     if request.method == 'POST':
         try:
             # Get form data
@@ -142,6 +184,11 @@ def add_destination():
 @app.route('/add_driver', methods=['GET', 'POST'])
 @login_required
 def add_driver():
+    """
+    Handles the addition of a new driver.
+    If the request method is POST, it processes the form data and inserts a new driver into the database.
+    If the request method is GET, it renders the form for adding a new driver.
+    """
     if request.method == 'POST':
         # Get form data
         driver_firstname = request.form['first_name']
@@ -162,11 +209,14 @@ def add_driver():
 @app.route('/add_coach', methods=['GET', 'POST'])
 @login_required
 def add_coach():
+    """
+    Handles the addition of a new coach.
+    If the request method is POST, it processes the form data and inserts a new coach into the database.
+    If the request method is GET, it renders the form for adding a new coach.
+    """
     if request.method == 'POST':
         # Get form data
-       
         reg_number = request.form['reg_number']
-        print(reg_number)
         num_of_seats = request.form['seating_capacity']
         
         # Insert data into the database
@@ -183,6 +233,13 @@ def add_coach():
 
 @app.route('/search', methods=['GET', 'POST'])
 def search():
+    """
+    Handles the search functionality.
+    If the request method is POST, it processes the form data to search within a selected table and column.
+    If the request method is GET, it processes the query parameters to perform the search.
+    Fetches the list of tables and columns dynamically from the database.
+    Renders the search results on the search page.
+    """
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     cursor.execute('SHOW TABLES')
     tables = cursor.fetchall()
@@ -235,6 +292,12 @@ def search():
 
 @app.route('/add_booking', methods=['GET', 'POST'])
 def add_booking():
+    """
+    Handles the addition of a new booking.
+    If the request method is POST, it processes the form data and inserts a new booking into the database.
+    If the request method is GET, it fetches existing customers, destinations, and trips to populate the form.
+    Renders the booking form and displays success or error messages based on the operation result.
+    """
     # Fetch all necessary data for the form (used in both GET and POST)
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     
@@ -317,7 +380,8 @@ def get_booked_seats():
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     cursor.execute('''
         SELECT 
-            c.num_of_seats - COALESCE(SUM(b.num_of_people), 0) AS seats_available
+            c.num_of_seats - COALESCE(SUM(b.num_of_people), 0) AS seats_available,
+            c.num_of_seats
         FROM 
             trip t
         JOIN 
@@ -333,8 +397,8 @@ def get_booked_seats():
     cursor.close()
 
     seats_available = result['seats_available'] if result['seats_available'] is not None else 0
-    print(f"Seats available: {seats_available}")
-    return jsonify({'seats_available': seats_available})
+    num_of_seats = result['num_of_seats']
+    return jsonify({'seats_available': seats_available, 'num_of_seats': num_of_seats})
 
 
 if __name__ == "__main__":

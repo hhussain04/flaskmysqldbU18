@@ -34,10 +34,10 @@
                 .then(response => response.json())
                 .then(data => {
                     const seatsAvailable = data.seats_available;
+                    const totalSeats = data.num_of_seats;
                     const seatContainer = document.querySelector('.seat-container');
                     seatContainer.innerHTML = '';
 
-                    const totalSeats = 49; // Assuming the coach has 49 seats
                     for (let seat = 1; seat <= totalSeats; seat++) {
                         const seatDiv = document.createElement('div');
                         seatDiv.classList.add('seat');
