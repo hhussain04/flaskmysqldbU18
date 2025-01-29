@@ -141,7 +141,7 @@ def add_trip():
     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     cursor.execute('SELECT destination_id, destination_name FROM destination')
     destinations = cursor.fetchall()
-    cursor.execute('SELECT coach_id, reg_number, num_of_seats FROM coach')
+    cursor.execute('SELECT coach_id, coach_registration, num_of_seats FROM coach')
     coaches = cursor.fetchall()
     cursor.execute('SELECT driver_id, CONCAT(driver_first_name, " ", driver_last_name) AS name FROM driver')
     drivers = cursor.fetchall()
