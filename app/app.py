@@ -1,11 +1,12 @@
 # Importing necessary libraries and modules
-from flask import Flask, render_template, request, redirect, url_for, session, jsonify
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify, abort
 from flask_mysqldb import MySQL
 import MySQLdb.cursors
 from functools import wraps
 import secrets
 import sys
 import datetime
+import os 
 
 # Initialize the Flask application
 app = Flask(__name__)
@@ -37,7 +38,7 @@ def exit_app():
     """
     Exits the application.
     """
-    sys.exit(0) 
+    app.aborter(500) 
 
 def login_required(f):
     """
