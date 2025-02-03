@@ -40,38 +40,6 @@ def exit_app():
     """
     app.aborter(500) 
 
-def login_required(f):
-    """
-    Decorator function to ensure that the user is logged in, applied to routes that require authentication.
-    If the user is not logged in, they are redirected to the login page.
-    """
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'logged_in' not in session:
-            session['next'] = request.url
-            return redirect(url_for('login'))
-        return f(*args, **kwargs)
-    return decorated_function
-
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    """
-    Handles the login functionality.
-    If the request method is POST, it checks the password.
-    If the password is correct, the user is logged in and redirected to the next page.
-    If the password is incorrect, an error message is displayed.
-    """
-    next_page = session.get('next', url_for('index'))
-    if request.method == 'POST':
-        password = request.form['password']
-        if password == ADMIN_PASSWORD:
-            session['logged_in'] = True
-            return redirect(next_page)
-        else:
-            error = 'Invalid password'
-            return render_template('login.html', error=error)
-    return render_template('login.html')
-
 @app.route('/new_information')
 def new_information():
     """
@@ -111,7 +79,7 @@ def add_customer():
     return render_template('add/customer.html')
 
 @app.route('/add_trip', methods=['GET', 'POST'])
-@login_required
+
 def add_trip():
     """
     Handles the addition of a new trip.
@@ -151,7 +119,7 @@ def add_trip():
     return render_template('add/trip.html', destinations=destinations, coaches=coaches, drivers=drivers)
 
 @app.route('/add_destination', methods=['GET', 'POST'])
-@login_required
+
 def add_destination():
     """
     Handles the addition of a new destination.
@@ -183,7 +151,7 @@ def add_destination():
     return render_template('add/destination.html')
 
 @app.route('/add_driver', methods=['GET', 'POST'])
-@login_required
+
 def add_driver():
     """
     Handles the addition of a new driver.
@@ -208,7 +176,7 @@ def add_driver():
     return render_template('add/driver.html')
 
 @app.route('/add_coach', methods=['GET', 'POST'])
-@login_required
+
 def add_coach():
     """
     Handles the addition of a new coach.
@@ -322,11 +290,7 @@ def add_booking():
         trip_id = request.form['trip_date']
         customer_id = request.form['customer']
         special_notes = request.form.get('special_notes', '')
-        selected_seats = request.form.getlist('selected_seats')
-        print(selected_seats)
-        selected_seats = selected_seats[0].split(',')
-        num_people = len(selected_seats)
-        print(num_people)
+        num_people = int(request.form['num_people'])
 
         # Calculate booking cost
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
@@ -363,6 +327,7 @@ def add_booking():
                            customers=customers,
                            destinations=destinations,
                            trips=trips)
+
 
 @app.route('/get_booked_seats')
 def get_booked_seats():

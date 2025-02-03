@@ -26,6 +26,12 @@ body {
     justify-content: center;
     align-items: center;
     min-height: 100vh;
+    position: relative;
+    background-image: url('SDClogo.png');
+    background-position: top center;
+    background-repeat: no-repeat;
+    background-size: 200px 200px;
+    padding-top: 210px; /* 200px for the logo height + 10px gap */
 }
 
 .container {
@@ -177,4 +183,25 @@ textarea {
     max-width: 300px;
     margin: 20px auto;
     justify-content: center;
+}
+
+.form-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.form-group {
+    flex: 1;
+    margin-right: 10px;
+}
+
+.form-group:last-child {
+    margin-right: 0;
+}
+
+.button-row {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
 }
